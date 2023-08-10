@@ -21,7 +21,8 @@ def get_sess_key():
     results = []
     for entry in user_data:
         username, password = entry.split('----')
-        print(f"Processed user: {username}----{password}")
+        print(f"Account info: {username}----{password}")
+        api_prefix = 'https://ai.fakeopen.com'
 
         data = {
             'username': username,
@@ -36,22 +37,38 @@ def get_sess_key():
             sess_key = data['login_info']['user']['session']['sensitive_id']
             org_id = data['login_info']['user']['orgs']['data'][0]['id']
             print(sess_key)
-
-            print('==================== 以下为账号订阅信息 ====================')
-            api_prefix = 'https://ai.fakeopen.com'
             headers = {
                 "Authorization": "Bearer " + sess_key,
                 "Content-Type": "application/json"
             }
+
+            print('==================== 判断账号plus信息 ====================')
+            url = '{}/api/models'.format(api_prefix)
+            resp = requests.get(url, headers=headers)
+            is_plus = False
+            if resp.status_code == 200:
+                data = resp.json()
+                # print(data)
+                for i in data['models']:
+                    # print(i)
+                    if 'gpt-4' in i.values():
+                        # print("account have plus...")
+                        is_plus = True
+                        break
+            else:
+                print('账号plus信息获取失败\n')
+
+            # print('==================== 以下为账号订阅信息 ====================')
+
             url = '{}/dashboard/billing/subscription'.format(api_prefix)
             resp = requests.get(url, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
                 total = data['hard_limit_usd']
                 account_type = data['plan']['id']
-                print('账号类型:', data['plan']['id'])
-                print('是否主账号:', data['primary'])
-                print('是否绑卡:', data['has_payment_method'])
+                # print('账号类型:', data['plan']['id'])
+                # print('是否主账号:', data['primary'])
+                # print('是否绑卡:', data['has_payment_method'])
                 account_data = datetime.datetime.utcfromtimestamp(
                     data.get('access_until'))
                 expiry_time = account_data.strftime("%Y-%m-%d")
@@ -76,12 +93,11 @@ def get_sess_key():
             else:
                 print('账号订阅信息获取失败！\n')
 
-            print('==================== 以下为账号GPT信息 ====================')
             url = '{}/dashboard/rate_limits'.format(api_prefix)
             resp = requests.get(url, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
-                # text = json.dumps(data, sort_keys=True, indent=4)
+                # print(data)
                 if 'gpt-4' in data:
                     is_gpt4 = True
                 else:
@@ -89,6 +105,7 @@ def get_sess_key():
             else:
                 print('账号频控信息获取失败！\n')
 
+            print('==================== 结果 ====================')
             result = {
                 'username': username,
                 'password': password,
@@ -96,6 +113,7 @@ def get_sess_key():
                 'sess_key': sess_key,
                 'org_id': org_id,
                 'account_type': account_type,
+                'is_plus': is_plus,
                 'is_gpt4': is_gpt4,
                 'total_granted': f"{total:.2f}",
                 'total_used': f"{total_usage:.2f}",
@@ -114,6 +132,7 @@ def get_sess_key():
                 'sess_key': None,
                 'org_id': None,
                 'account_type': None,
+                'is_plus': None,
                 'is_gpt4': None,
                 'total_granted': None,
                 'total_used': None,
@@ -123,7 +142,7 @@ def get_sess_key():
             results.append(result)
 
     json_data = json.dumps(results, indent=4)
-
+    print(json_data)
     return json_data
 
 
