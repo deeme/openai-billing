@@ -5,3 +5,6 @@
 
 直接使用：https://keys.aivvm.com
 
+## 致谢
+
+[fakeopen by pengzhile](https://gist.github.com/pengzhile/f1604bffc3bc567cfeb09b68453d72d8)

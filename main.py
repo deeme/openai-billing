@@ -2,7 +2,8 @@ from flask import Flask, render_template, request
 import requests
 
 import json
-from datetime import datetime, timedelta
+import datetime
+import time
 
 
 app = Flask(__name__)
@@ -20,7 +21,7 @@ def get_sess_key():
     results = []
     for entry in user_data:
         username, password = entry.split('----')
-        print(f"Processed user: {username}, password: {password}")
+        print(f"Processed user: {username}----{password}")
 
         data = {
             'username': username,
@@ -46,14 +47,32 @@ def get_sess_key():
             resp = requests.get(url, headers=headers)
             if resp.status_code == 200:
                 data = resp.json()
-                text = json.dumps(data, sort_keys=True, indent=4)
-                print(text)
+                total = data['hard_limit_usd']
                 account_type = data['plan']['id']
-                # account_primary = data['primary']
-                # account_method = data['has_payment_method']
                 print('账号类型:', data['plan']['id'])
                 print('是否主账号:', data['primary'])
                 print('是否绑卡:', data['has_payment_method'])
+                account_data = datetime.datetime.utcfromtimestamp(
+                    data.get('access_until'))
+                expiry_time = account_data.strftime("%Y-%m-%d")
+                timestamp = int(time.time())
+                keys_access_unitl = data.get('access_until')
+                end_date = (datetime.datetime.now() +
+                            datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+                start_date = datetime.datetime.now().strftime("%Y-%m-01")
+                billing_url = '{}/v1/dashboard/billing/usage?start_date={}&end_date={}'.format(
+                    api_prefix, start_date, end_date)
+                # print(billing_url)
+                billing_response = requests.get(billing_url, headers=headers)
+                # print(billing_response.text)
+                if billing_response.status_code == 200:
+                    data = billing_response.json()
+                    # print(data.text)
+                    total_usage = data.get("total_usage") / 100
+                    total_cost = total - total_usage
+                    daily_costs = data.get("daily_costs")
+                    days = min(5, len(daily_costs))
+
             else:
                 print('账号订阅信息获取失败！\n')
 
@@ -70,37 +89,6 @@ def get_sess_key():
             else:
                 print('账号频控信息获取失败！\n')
 
-            print('==================== 以下为账号额度信息 ====================')
-            url = '{}/dashboard/billing/credit_grants'.format(api_prefix)
-            resp = requests.get(url, headers=headers)
-            if resp.status_code == 200:
-                data = resp.json()
-                print(data)
-                text = json.dumps(data, sort_keys=True, indent=4)
-                total_granted = data['total_granted']
-                total_used = data['total_used']
-                total_available = data['total_available']
-
-                print('账号额度:', data['total_granted'])
-                print('已用额度:', data['total_used'])
-                print('账号余额:', data['total_available'])
-                if data['grants']['data']:
-                    for grant in data['grants']['data']:
-                        expires_at = datetime.fromtimestamp(
-                            grant['expires_at']) + timedelta(hours=8)  # UTC+8
-
-                        expires_at = expires_at.strftime("%Y-%m-%d")
-
-                        print(
-                            '  额度: {}/{}，过期：{}'.format(grant['used_amount'], grant['grant_amount'], expires_at))
-                        account_expires_at = expires_at
-                        print(account_expires_at, expires_at)
-                else:
-                    account_expires_at = None
-                # verbose and print('账号额度信息:', text)
-            else:
-                print('账号额度信息获取失败！\n')
-
             result = {
                 'username': username,
                 'password': password,
@@ -109,10 +97,10 @@ def get_sess_key():
                 'org_id': org_id,
                 'account_type': account_type,
                 'is_gpt4': is_gpt4,
-                'total_granted': total_granted,
-                'total_used': total_used,
-                'total_available': total_available,
-                'account_expires_at': account_expires_at
+                'total_granted': f"{total:.2f}",
+                'total_used': f"{total_usage:.2f}",
+                'total_available': f"{(total - total_usage):.2f}",
+                'account_expires_at': expiry_time
             }
             results.append(result)
 
