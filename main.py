@@ -143,7 +143,7 @@ def get_sess_key():
                         'username': username,
                         'password': password,
                         'is_alive': False,
-                        'sess_key': None,
+                        'err_str': err_str,
                         'org_id': None,
                         'account_type': None,
                         'is_plus': None,
