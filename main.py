@@ -44,13 +44,13 @@ def get_sess_key():
                 resp = requests.post(
                     'https://ai.fakeopen.com/auth/platform/login', data=data)
                 result = {}  # Initialize the result dictionary
-
+                # print(resp.text)
                 if resp.status_code == 200:
                     # print('==================== 以下为账号SESS信息 ====================')
                     data = resp.json()
                     sess_key = data['login_info']['user']['session']['sensitive_id']
                     org_id = data['login_info']['user']['orgs']['data'][0]['id']
-                    print(sess_key)
+                    # print(sess_key)
                     headers = {
                         "Authorization": "Bearer " + sess_key,
                         "Content-Type": "application/json"
@@ -78,15 +78,28 @@ def get_sess_key():
                     url = '{}/dashboard/billing/subscription'.format(
                         api_prefix)
                     resp = requests.get(url, headers=headers)
+                    # print(resp.text)
                     if resp.status_code == 200:
+                        print(resp.text)
                         data = resp.json()
                         total = data['hard_limit_usd']
                         account_type = data['plan']['id']
-                        account_data = datetime.datetime.utcfromtimestamp(
-                            data.get('access_until'))
-                        expiry_time = account_data.strftime("%Y-%m-%d")
-                        timestamp = int(time.time())
-                        keys_access_unitl = data.get('access_until')
+                        # print(account_type)
+                        if data['access_until'] == None:
+                            expiry_time = None
+                        else:
+                            account_data = datetime.datetime.utcfromtimestamp(
+                                data['access_until'])
+                            # print(account_data)
+                            expiry_time = account_data.strftime("%Y-%m-%d")
+                        billing_mechanism = data['billing_mechanism']
+                        # print(billing_mechanism)
+                        if billing_mechanism == None:
+                            pay_type = "pay_ment"
+                        elif billing_mechanism == "arrears":
+                            pay_type = "arrears"
+                        elif billing_mechanism == "advance":
+                            pay_type = "advance"
                         end_date = (datetime.datetime.now() +
                                     datetime.timedelta(days=1)).strftime("%Y-%m-%d")
                         start_date = datetime.datetime.now().strftime("%Y-%m-01")
@@ -111,7 +124,6 @@ def get_sess_key():
                     resp = requests.get(url, headers=headers)
                     if resp.status_code == 200:
                         data = resp.json()
-                        # print(data)
                         if 'gpt-4' in data:
                             is_gpt4 = True
                         else:
@@ -120,20 +132,21 @@ def get_sess_key():
                         print('账号频控信息获取失败！\n')
 
                     # print('==================== 结果 ====================')
-                    # print(result)
+                    print(result)
                     result = {
                         'username': username,
                         'password': password,
-                        'is_alive': True,
+                        'alive': True,
                         'sess_key': sess_key,
-                        'org_id': org_id,
-                        'account_type': account_type,
-                        'is_plus': is_plus,
-                        'is_gpt4': is_gpt4,
-                        'total_granted': f"{total:.2f}",
-                        'total_used': f"{total_usage:.2f}",
-                        'total_available': f"{(total - total_usage):.2f}",
-                        'account_expires_at': expiry_time
+                        'org': org_id,
+                        'type': account_type,
+                        'plus': is_plus,
+                        'gpt4': is_gpt4,
+                        'pay_type': pay_type,
+                        'granted': f"{total:.2f}",
+                        'used': f"{total_usage:.2f}",
+                        'available': f"{(total - total_usage):.2f}",
+                        'expires_at': expiry_time
                     }
 
                 else:
@@ -143,16 +156,17 @@ def get_sess_key():
                     result = {
                         'username': username,
                         'password': password,
-                        'is_alive': False,
-                        'err_str': err_str,
-                        'org_id': None,
-                        'account_type': None,
-                        'is_plus': None,
-                        'is_gpt4': None,
-                        'total_granted': None,
-                        'total_used': None,
-                        'total_available': None,
-                        'account_expires_at': None
+                        'alive': False,
+                        'err': err_str,
+                        'org': None,
+                        'type': None,
+                        'plus': None,
+                        'gpt4': None,
+                        'granted': None,
+                        'pay_type': None,
+                        'used': None,
+                        'available': None,
+                        'expires_at': None
                     }
                 batch_results.append(result)
 
