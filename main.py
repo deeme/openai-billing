@@ -14,6 +14,15 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/ip')
+def get_public_ip():
+    response = requests.get('https://api.ipify.org')
+    return response.text
+
+
+print("本地服务器IP:" + get_public_ip())
+
+
 @app.route('/get_sess_key', methods=['POST'])
 def get_sess_key():
 
