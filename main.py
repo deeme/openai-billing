@@ -49,7 +49,7 @@ def get_sess_key():
                     'password': password,
                     'prompt': 'login',
                 }
-                time.sleep(10)
+                time.sleep(5)
                 resp = requests.post(
                     'https://ai.fakeopen.com/auth/platform/login', data=data)
                 result = {}  # Initialize the result dictionary
