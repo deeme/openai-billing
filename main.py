@@ -54,9 +54,12 @@ def get_sess_key():
                     'https://ai.fakeopen.com/auth/platform/login', data=data)
                 result = {}  # Initialize the result dictionary
                 # print(resp.text)
-                if resp.status_code == 200:
+                data = resp.json()
+                # print(data)
+
+                if resp.status_code == 200 and (resp.json())['login_info']['user'] is not None and (resp.json())['login_info']['user'] != '':
                     # print('==================== 以下为账号SESS信息 ====================')
-                    data = resp.json()
+                    # data = resp.json()
                     sess_key = data['login_info']['user']['session']['sensitive_id']
                     org_id = data['login_info']['user']['orgs']['data'][0]['id']
                     # print(sess_key)
@@ -141,7 +144,7 @@ def get_sess_key():
                         print('账号频控信息获取失败！\n')
 
                     # print('==================== 结果 ====================')
-                    print(result)
+                    # print(result)
                     result = {
                         'username': username,
                         'password': password,
@@ -159,24 +162,45 @@ def get_sess_key():
                     }
 
                 else:
+                    # print(f"Account info: {username}----{password}")
                     err_str = resp.text.replace(
                         '\n', '').replace('\r', '').strip()
                     print('share token failed: {}'.format(err_str))
-                    result = {
-                        'username': username,
-                        'password': password,
-                        'alive': False,
-                        'err': err_str,
-                        'org': None,
-                        'type': None,
-                        'plus': None,
-                        'gpt4': None,
-                        'granted': None,
-                        'pay_type': None,
-                        'used': None,
-                        'available': None,
-                        'expires_at': None
-                    }
+                    if "scope" not in err_str:
+                        result = {
+                            'username': username,
+                            'password': password,
+                            'alive': False,
+                            'err': err_str,
+                            'org': None,
+                            'type': None,
+                            'plus': None,
+                            'gpt4': None,
+                            'granted': None,
+                            'pay_type': None,
+                            'used': None,
+                            'available': None,
+                            'expires_at': None
+                        }
+                    else:
+                        # print(data['token_info']['scope'])
+                        err_str = data['token_info']['scope']
+                        result = {
+                            'username': username,
+                            'password': password,
+                            'alive': False,
+                            'err': err_str,
+                            'org': None,
+                            'type': None,
+                            'plus': None,
+                            'gpt4': None,
+                            'granted': None,
+                            'pay_type': None,
+                            'used': None,
+                            'available': None,
+                            'expires_at': None
+                        }
+
                 batch_results.append(result)
 
             results.extend(batch_results)
@@ -185,7 +209,9 @@ def get_sess_key():
         # return jsonify({'error': str(e)})
 
     json_data = json.dumps(results, indent=4)
-    print(json_data)
+    # print(json_data)
+    print(json.dumps(results, separators=(',', ':')))
+
     return json_data
 
 
