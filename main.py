@@ -48,7 +48,7 @@ def get_sess_key():
                     'username': username,
                     'password': password,
                 })
-                # time.sleep(1)
+                time.sleep(3)
                 resp = requests.post(
                     'https://at.aivvm.com/platform/login', data=data)
                 result = {}  # Initialize the result dictionary
