@@ -44,23 +44,24 @@ def get_sess_key():
                 print(f"Account info: {username}----{password}")
                 api_prefix = 'https://ai.fakeopen.com'
 
-                data = json.dumps({
+                data = {
                     'username': username,
                     'password': password,
-                })
-                time.sleep(10)
+                    'prompt': 'login',
+                }
+                time.sleep(1)
                 resp = requests.post(
-                    'https://at.aivvm.com/platform/login', data=data)
+                    'https://ai.fakeopen.com/auth/platform/login', data=data)
                 result = {}  # Initialize the result dictionary
                 # print(resp.text)
                 data = resp.json()
                 # print(data)
 
-                if resp.status_code == 200 and (resp.json())['user'] is not None and (resp.json())['user'] != '':
-                    # print('==================== 以下为账号SESS信息 ====================')
+                # print('==================== 以下为账号SESS信息 ====================')
+                if resp.status_code == 200 and (resp.json())['login_info']['user'] is not None and (resp.json())['login_info']['user'] != '':
                     # data = resp.json()
-                    sess_key = data['user']['session']['sensitive_id']
-                    org_id = data['user']['orgs']['data'][0]['id']
+                    sess_key = data['login_info']['user']['session']['sensitive_id']
+                    org_id = data['login_info']['user']['orgs']['data'][0]['id']
                     print(sess_key)
                     headers = {
                         "Authorization": "Bearer " + sess_key,
