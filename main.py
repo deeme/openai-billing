@@ -76,10 +76,10 @@ def get_sess_key():
                 # print(data)
 
                 # print('==================== 以下为账号SESS信息 ====================')
-                if resp.status_code == 200 and (resp.json())['login']['user'] is not None and (resp.json())['login']['user'] != '':
+                if resp.status_code == 200 and (resp.json())['user'] is not None and (resp.json())['user'] != '':
                     # data = resp.json()
-                    sess_key = data['login']['user']['session']['sensitive_id']
-                    org_id = data['login']['user']['orgs']['data'][0]['id']
+                    sess_key = data['user']['session']['sensitive_id']
+                    org_id = data['user']['orgs']['data'][0]['id']
                     print(sess_key)
                     headers = {
                         "Authorization": "Bearer " + sess_key,
