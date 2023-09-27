@@ -55,13 +55,15 @@ def get_sess_key():
                 response = requests.request(
                     "POST", url, headers=headers, data=payload)
                 data = json.loads(response.text)
+                print(data)
                 access_token = data['data']['access_token']
+                print(access_token)
 
                 access_headers = {
                     'Content-Type': 'application/json',
                     'Authorization': "Bearer " + access_token
                 }
-
+                print(access_headers)
                 api_prefix = 'https://ai.fakeopen.com'
 
                 time.sleep(1)
@@ -69,7 +71,7 @@ def get_sess_key():
                 resp = requests.post(
                     'https://api.openai.com/dashboard/onboarding/login', headers=access_headers)
                 result = {}  # Initialize the result dictionary
-                # print(resp.text)
+                print(resp.text)
                 data = resp.json()
                 # print(data)
 
