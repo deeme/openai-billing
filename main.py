@@ -42,26 +42,42 @@ def get_sess_key():
                 username = item['username']
                 password = item['password']
                 print(f"Account info: {username}----{password}")
+                # 获取access token
+                url = "https://api.xf233.top/api/login"
+
+                payload = json.dumps({
+                    "email": username,
+                    "password": password
+                })
+                headers = {
+                    'Content-Type': 'application/json'
+                }
+                response = requests.request(
+                    "POST", url, headers=headers, data=payload)
+                data = json.loads(response.text)
+                access_token = data['data']['access_token']
+
+                access_headers = {
+                    'Content-Type': 'application/json',
+                    'Authorization': "Bearer " + access_token
+                }
+
                 api_prefix = 'https://ai.fakeopen.com'
 
-                data = {
-                    'username': username,
-                    'password': password,
-                    'prompt': 'login',
-                }
                 time.sleep(1)
+
                 resp = requests.post(
-                    'https://ai.fakeopen.com/auth/platform/login', data=data)
+                    'https://api.openai.com/dashboard/onboarding/login', headers=access_headers)
                 result = {}  # Initialize the result dictionary
                 # print(resp.text)
                 data = resp.json()
                 # print(data)
 
                 # print('==================== 以下为账号SESS信息 ====================')
-                if resp.status_code == 200 and (resp.json())['login_info']['user'] is not None and (resp.json())['login_info']['user'] != '':
+                if resp.status_code == 200 and (resp.json())['login']['user'] is not None and (resp.json())['login']['user'] != '':
                     # data = resp.json()
-                    sess_key = data['login_info']['user']['session']['sensitive_id']
-                    org_id = data['login_info']['user']['orgs']['data'][0]['id']
+                    sess_key = data['login']['user']['session']['sensitive_id']
+                    org_id = data['login']['user']['orgs']['data'][0]['id']
                     print(sess_key)
                     headers = {
                         "Authorization": "Bearer " + sess_key,
