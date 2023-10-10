@@ -55,6 +55,25 @@ def get_sess_key():
                 response = requests.request(
                     "POST", url, headers=headers, data=payload)
                 data = json.loads(response.text)
+                # 自动塞号
+                if data['code'] == 200:
+                    # print(data)
+                    up_load_headers = {
+                        'Content-Type': 'application/json',
+                    }
+                    up_data = [
+                        {
+                            'email': username,
+                            'password': password,
+                            'fk_token': data['data']['fk_token'],
+                            'refresh_token': data['data']['refresh_token'],
+                        },
+                    ]
+                    print(up_data)
+                    response = requests.post(
+                        'https://api.xf233.top/api/updatePool', headers=up_load_headers, json=up_data)
+                    print(response.text)
+                #
                 print(data)
                 access_token = data['data']['access_token']
                 print(access_token)
