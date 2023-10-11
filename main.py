@@ -14,6 +14,14 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    # 在这里进行健康检查逻辑，例如检查数据库连接、第三方服务等
+
+    # 如果一切正常，返回一个成功的响应
+    return jsonify(status='ok')
+
+
 @app.route('/ip')
 def get_public_ip():
     response = requests.get('https://api.ipify.org')
@@ -56,7 +64,6 @@ def get_sess_key():
                 print(response.text)
                 token_data = json.loads(response.text)
                 if token_data['access_token']:
-                    print("aaa")
                     headers = {
                         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
                     }
