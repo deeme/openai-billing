@@ -166,7 +166,7 @@ def get_sess_key():
 
                     # print('==================== 判断账号plus信息 ====================')
                     url = '{}/api/models'.format(api_prefix)
-                    resp = requests.get(url, headers=headers)
+                    resp = requests.get(url, headers=access_headers)
                     is_plus = False
                     if resp.status_code == 200:
                         data = resp.json()
