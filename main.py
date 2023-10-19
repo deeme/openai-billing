@@ -14,6 +14,14 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/health', methods=['GET'])
+def health_check():
+    # 在这里进行健康检查逻辑，例如检查数据库连接、第三方服务等
+
+    # 如果一切正常，返回一个成功的响应
+    return jsonify(status='ok')
+
+
 @app.route('/ip')
 def get_public_ip():
     response = requests.get('https://api.ipify.org')
@@ -42,41 +50,92 @@ def get_sess_key():
                 username = item['username']
                 password = item['password']
                 print(f"Account info: {username}----{password}")
-                # 获取access token
-                url = "https://api.xf233.top/api/login"
 
-                payload = json.dumps({
-                    "email": username,
-                    "password": password
-                })
+                # 获取access token -- fakeopen
+                url = "https://ai.fakeopen.com/auth/login"
                 headers = {
                     'Content-Type': 'application/json'
                 }
-                response = requests.request(
-                    "POST", url, headers=headers, data=payload)
-                data = json.loads(response.text)
-                # 自动塞号
-                if data['code'] == 200:
-                    # print(data)
+                payload = {
+                    'username': username,
+                    'password': password,
+                }
+                response = requests.post(url, data=payload)
+                print(response.text)
+                token_data = json.loads(response.text)
+                if token_data['access_token']:
+                    headers = {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                    }
+                    print(token_data['access_token'])
+                    data = {
+                        'unique_name': 'FK',
+                        'access_token': token_data['access_token'],
+                        'expires_in': '0',
+                        'site_limit': '',
+                    }
+                    fk_response = requests.post(
+                        'https://ai.fakeopen.com/token/register', headers=headers, data=data)
+                    fk_data = json.loads(fk_response.text)
+                    print(fk_data)
+
+                    fk_token = fk_data['token_key']
+                    print(fk_token)
+
                     up_load_headers = {
                         'Content-Type': 'application/json',
                     }
-                    up_data = [
+                    updatePool_data = [
                         {
                             'email': username,
                             'password': password,
-                            'fk_token': data['data']['fk_token'],
-                            'refresh_token': data['data']['refresh_token'],
+                            'fk_token': fk_token,
+                            'refresh_token': token_data['refresh_token'],
                         },
                     ]
-                    print(up_data)
+                    print(updatePool_data)
                     response = requests.post(
-                        'https://api.xf233.top/api/updatePool', headers=up_load_headers, json=up_data)
+                        'https://api.xf233.top/api/updatePool', headers=up_load_headers, json=updatePool_data)
                     print(response.text)
-                #
-                print(data)
-                access_token = data['data']['access_token']
+                print(token_data)
+                access_token = token_data['access_token']
                 print(access_token)
+
+                # # 获取access token -- kevin
+                # url = "https://api.xf233.top/api/login"
+
+                # payload = json.dumps({
+                #     "email": username,
+                #     "password": password
+                # })
+
+                # response = requests.request(
+                #     "POST", url, headers=headers, data=payload)
+
+                # 自动塞号
+                # data = json.loads(response.text)
+                # print(data)
+                # if data['code'] == 200:
+                #     # print(data)
+                #     up_load_headers = {
+                #         'Content-Type': 'application/json',
+                #     }
+                #     up_data = [
+                #         {
+                #             'email': username,
+                #             'password': password,
+                #             'fk_token': data['data']['fk_token'],
+                #             'refresh_token': data['data']['refresh_token'],
+                #         },
+                #     ]
+                #     print(up_data)
+                #     response = requests.post(
+                #         'https://api.xf233.top/api/updatePool', headers=up_load_headers, json=up_data)
+                #     print(response.text)
+                # #
+                # print(data)
+                # access_token = data['data']['access_token']
+                # print(access_token)
 
                 access_headers = {
                     'Content-Type': 'application/json',
