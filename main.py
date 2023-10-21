@@ -61,6 +61,7 @@ def get_sess_key():
                     'password': password,
                 }
                 response = requests.post(url, data=payload)
+                print("获取access_token")
                 print(response.text)
                 token_data = json.loads(response.text)
                 if token_data['access_token']:
@@ -77,19 +78,18 @@ def get_sess_key():
                     fk_response = requests.post(
                         'https://ai.fakeopen.com/token/register', headers=headers, data=data)
                     fk_data = json.loads(fk_response.text)
+                    print("获取fk")
                     print(fk_data)
 
                     fk_token = fk_data['token_key']
                     # print(fk_token)
 
-                    up_load_headers = {
-                        'Content-Type': 'application/json',
-                    }
                     # 判断models是否存活
                     models_access_headers = {
                         'Content-Type': 'application/json',
                         'Authorization': "Bearer " + token_data['access_token']
                     }
+                    print(models_access_headers)
 
                     resp = requests.get(
                         "https://ai.fakeopen.com/api/models", headers=models_access_headers)
@@ -101,20 +101,22 @@ def get_sess_key():
                         for i in data['models']:
                             # print(i)
                             if 'slug' in i.keys():
-                                # print("account alive")
-
+                                print("account alive")
+                                up_load_headers = {
+                                    'Content-Type': 'application/json'
+                                }
                                 updatePool_data = [
                                     {
                                         'email': username,
                                         'password': password,
-                                        'fk_token': fk_token,
-                                        'refresh_token': token_data['refresh_token'],
+                                        'fk_token': fk_token
                                     },
                                 ]
                                 print(updatePool_data)
                                 response = requests.post(
                                     'https://api.xf233.top/api/updatePool', headers=up_load_headers, json=updatePool_data)
                                 print(response.text)
+                                break
                 # print(token_data)
                 access_token = token_data['access_token']
                 # print(access_token)
@@ -128,18 +130,26 @@ def get_sess_key():
 
                 time.sleep(1)
 
+                # 获取platform
+                plat_payload = {
+                    'username': username,
+                    'password': password,
+                    'prompt': "login"
+                }
+
                 resp = requests.post(
-                    'https://api.openai.com/dashboard/onboarding/login', headers=access_headers)
+                    "https://ai.fakeopen.com/auth/platform/login", headers=headers, data=plat_payload)
+                print(resp.text)
                 result = {}  # Initialize the result dictionary
                 print(resp.text)
                 data = resp.json()
                 # print(data)
 
                 # print('==================== 以下为账号SESS信息 ====================')
-                if resp.status_code == 200 and (resp.json())['user'] is not None and (resp.json())['user'] != '':
+                if resp.status_code == 200 and (resp.json())['login_info']['user'] is not None and (resp.json())['login_info']['user'] != '':
                     # data = resp.json()
-                    sess_key = data['user']['session']['sensitive_id']
-                    org_id = data['user']['orgs']['data'][0]['id']
+                    sess_key = data['login_info']['user']['session']['sensitive_id']
+                    org_id = data['login_info']['user']['orgs']['data'][0]['id']
                     print(sess_key)
                     headers = {
                         "Authorization": "Bearer " + sess_key,
